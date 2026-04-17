@@ -1,12 +1,12 @@
 [package]
-name = "williamnorth/pathfinding-plus"
+name = "nsawill1405/pathfinding-plus"
 description = "Crowd-coordination pathfinding utilities for Roblox, built on PathfindingService."
 version = "0.1.0"
 license = "MIT"
 authors = ["William North"]
 realm = "shared"
 registry = "https://github.com/UpliftGames/wally-index"
-repository = "https://github.com/williamnorth/pathfinding-plus"
+repository = "https://github.com/nsawill1405/Pathfinding-Plus"
 exclude = [
     "node_modules",
     ".git",

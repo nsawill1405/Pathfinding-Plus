@@ -13,7 +13,7 @@ Add the package to your `wally.toml`:
 
 ```toml
 [dependencies]
-PathfindingPlus = "williamnorth/pathfinding-plus@0.1.0"
+PathfindingPlus = "nsawill1405/pathfinding-plus@0.1.0"
 ```
 
 Then install:

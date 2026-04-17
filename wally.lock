@@ -3,6 +3,6 @@
 registry = "test"
 
 [[package]]
-name = "williamnorth/pathfinding-plus"
+name = "nsawill1405/pathfinding-plus"
 version = "0.1.0"
 dependencies = []
