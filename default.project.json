@@ -17,12 +17,6 @@
       "PathfindingPlusExample": {
         "$path": "example/src/ServerScriptService"
       }
-    },
-    "Workspace": {
-      "$className": "Workspace",
-      "PathfindingPlusMarkers": {
-        "$path": "example/src/Workspace"
-      }
     }
   }
 }
