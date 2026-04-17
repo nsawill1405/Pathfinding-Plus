@@ -1,7 +1,9 @@
-local Planner = require(script.Parent.Parent.Planner)
-local Janitor = require(script.Parent.Parent.Shared.Janitor)
-local Signal = require(script.Parent.Parent.Shared.Signal)
-local Goal = require(script.Parent.Parent.Shared.Goal)
+local Planner = require(script.Parent.Planner)
+local Janitor = require(script.Parent.Shared.Janitor)
+local Signal = require(script.Parent.Shared.Signal)
+local Goal = require(script.Parent.Shared.Goal)
+local MovingGoalPolicy = require(script.MovingGoalPolicy)
+local PrepareReplan = require(script.PrepareReplan)
 local StateMachine = require(script.StateMachine)
 
 local Navigator = {}
@@ -16,6 +18,8 @@ local DEFAULTS = {
 	waypointReachThreshold = 2.5,
 	stuckDistanceThreshold = 0.75,
 	repathDelay = 0.05,
+	movingGoalThreshold = 4,
+	movingGoalRepathInterval = 0.4,
 }
 
 local EVENT_NAMES = {
@@ -181,6 +185,34 @@ function Navigator:_computePlan(run, startPosition, goalPosition)
 	return self._planner:_computeInternal(startPosition, goalPosition, requestOptions)
 end
 
+function Navigator:_shouldRepathForMovingGoal(run, now)
+	local currentGoalPosition, goalError = self:_resolveGoal(run)
+	if currentGoalPosition == nil then
+		return false, goalError
+	end
+
+	local shouldRepath = MovingGoalPolicy.shouldRepath({
+		enabled = run.moveOptions.followMovingGoal == true,
+		goalType = typeof(run.goal),
+		lastGoalPosition = run.lastGoalPosition,
+		currentGoalPosition = currentGoalPosition,
+		threshold = run.moveOptions.movingGoalThreshold or self._options.movingGoalThreshold,
+		now = now,
+		lastRepathAt = run.lastMovingGoalRepathAt,
+		interval = run.moveOptions.movingGoalRepathInterval
+			or self._options.movingGoalRepathInterval,
+	})
+
+	run.lastObservedGoalPosition = currentGoalPosition
+
+	if shouldRepath then
+		run.lastMovingGoalRepathAt = now
+		run.replanReason = "GoalMoved"
+	end
+
+	return shouldRepath, nil
+end
+
 function Navigator:_waitForWaypoint(run, waypoint)
 	self:_refreshAgentReferences()
 	if self._humanoid == nil or self._rootPart == nil then
@@ -202,6 +234,16 @@ function Navigator:_waitForWaypoint(run, waypoint)
 
 		if moveResult ~= nil then
 			break
+		end
+
+		local shouldRepathForGoalMove, goalError = self:_shouldRepathForMovingGoal(run, os.clock())
+		if goalError ~= nil then
+			return goalError
+		end
+
+		if shouldRepathForGoalMove then
+			connection:Disconnect()
+			return "Replan"
 		end
 
 		local currentRoot = self._rootPart
@@ -333,8 +375,9 @@ function Navigator:_runNavigation(run)
 		if run.replanCount == 0 then
 			self._stateMachine:Begin(false)
 		else
-			self._stateMachine:RequestReplan(run.replanReason or "BlockedAhead")
-			self.Replanned:Fire(self._model, run.replanReason, run.replanCount)
+			local replanReason = PrepareReplan.consume(run)
+			self._stateMachine:RequestReplan(replanReason)
+			self.Replanned:Fire(self._model, replanReason, run.replanCount)
 		end
 
 		local plan = self:_computePlan(run, self._rootPart.Position, goalPosition)
@@ -345,6 +388,8 @@ function Navigator:_runNavigation(run)
 		self._debug.computeCount += 1
 		self._debug.lastPlanStatus = plan.status
 		run.lastPlan = plan
+		run.lastGoalPosition = goalPosition
+		run.lastObservedGoalPosition = goalPosition
 
 		if not plan.ok then
 			self:_finishRun(run, "Failed", plan.failureReason or "ComputeError", plan)
@@ -374,6 +419,7 @@ function Navigator:_runNavigation(run)
 
 		if run.replanCount > self._options.maxReplans then
 			local terminalReason = if run.replanReason == "AgentStuck"
+					or run.replanReason == "GoalMoved"
 				then "Timeout"
 				else (run.replanReason or "Timeout")
 			self:_finishRun(run, "Failed", terminalReason)
@@ -396,6 +442,9 @@ function Navigator:MoveTo(goal, moveOptions)
 		replanReason = nil,
 		replanCount = 0,
 		nextWaypointIndex = 1,
+		lastGoalPosition = nil,
+		lastObservedGoalPosition = nil,
+		lastMovingGoalRepathAt = nil,
 		janitor = Janitor.new(),
 	}
 

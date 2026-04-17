@@ -5,6 +5,8 @@ local specs = {
 	require("./specs/SpacingPolicy.spec"),
 	require("./specs/NormalizeResult.spec"),
 	require("./specs/NavigatorState.spec"),
+	require("./specs/NavigatorReplan.spec"),
+	require("./specs/MovingGoalPolicy.spec"),
 }
 
 local passed = 0
