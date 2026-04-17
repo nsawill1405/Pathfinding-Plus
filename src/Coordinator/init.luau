@@ -1,6 +1,6 @@
-local Janitor = require(script.Parent.Parent.Shared.Janitor)
-local Goal = require(script.Parent.Parent.Shared.Goal)
-local PositionMath = require(script.Parent.Parent.Shared.PositionMath)
+local Janitor = require(script.Parent.Shared.Janitor)
+local Goal = require(script.Parent.Shared.Goal)
+local PositionMath = require(script.Parent.Shared.PositionMath)
 local RequestQueue = require(script.RequestQueue)
 local SpacingPolicy = require(script.SpacingPolicy)
 

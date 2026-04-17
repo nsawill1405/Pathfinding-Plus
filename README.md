@@ -58,6 +58,20 @@ end)
 navigator:MoveTo(workspace.Target)
 ```
 
+### Following a moving target
+
+```luau
+local navigator = PathfindingPlus.Navigator.new(workspace.NPC, {
+	moveTimeout = 3,
+})
+
+navigator:MoveTo(workspace.MovingTarget, {
+	followMovingGoal = true,
+	movingGoalThreshold = 5,
+	movingGoalRepathInterval = 0.4,
+})
+```
+
 ### Multiple navigators with one coordinator
 
 ```luau
@@ -130,6 +144,9 @@ Signals:
 - `maxRequestsPerSecond` limits total path computations through a shared coordinator.
 - `perNavigatorCooldown` stops one agent from monopolizing the queue.
 - `moveTimeout` and `maxReplans` control how aggressively a navigator recovers from getting stuck.
+- `followMovingGoal` makes a navigator periodically re-evaluate a moving `BasePart` or `Attachment` target.
+- `movingGoalThreshold` is the target drift in studs before a moving-goal replan is requested.
+- `movingGoalRepathInterval` is the minimum time between moving-goal replans.
 - `SetTargetSpacing` only affects explicit spacing keys or `BasePart` / `Attachment` goals. Raw `Vector3` goals need `moveOptions.spacingKey`.
 
 ## Guarantees

@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
@@ -47,48 +48,25 @@ local function createGoal(parent, name, position, color)
 end
 
 local function createNPC(parent, name, position, color)
-	local model = Instance.new("Model")
+	local model = Players:CreateHumanoidModelFromDescription(
+		Instance.new("HumanoidDescription"),
+		Enum.HumanoidRigType.R6
+	)
 	model.Name = name
 
-	local root = Instance.new("Part")
-	root.Name = "HumanoidRootPart"
-	root.Size = Vector3.new(2, 2, 1)
-	root.Position = position
-	root.Color = color
-	root.Material = Enum.Material.SmoothPlastic
-	root.Parent = model
-
-	local head = Instance.new("Part")
-	head.Name = "Head"
-	head.Size = Vector3.new(2, 1, 1)
-	head.Position = position + Vector3.new(0, 2.5, 0)
-	head.Color = color:Lerp(Color3.new(1, 1, 1), 0.3)
-	head.Parent = model
-
-	local torso = Instance.new("Part")
-	torso.Name = "Torso"
-	torso.Size = Vector3.new(2, 2, 1)
-	torso.Position = position + Vector3.new(0, 1, 0)
-	torso.Color = color
-	torso.Parent = model
-
-	local humanoid = Instance.new("Humanoid")
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
 	humanoid.WalkSpeed = 10
-	humanoid.Parent = model
-
-	local rootJoint = Instance.new("WeldConstraint")
-	rootJoint.Part0 = root
-	rootJoint.Part1 = torso
-	rootJoint.Parent = root
-
-	local headJoint = Instance.new("WeldConstraint")
-	headJoint.Part0 = torso
-	headJoint.Part1 = head
-	headJoint.Parent = torso
-
-	model.PrimaryPart = root
-	model:PivotTo(CFrame.new(position))
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 	model.Parent = parent
+	model:PivotTo(CFrame.new(position))
+
+	for _, descendant in ipairs(model:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			descendant.Color = if descendant.Name == "Head"
+				then color:Lerp(Color3.new(1, 1, 1), 0.25)
+				else color
+		end
+	end
 
 	return model
 end
@@ -128,43 +106,43 @@ local function buildBlockedScene(parent)
 	folder.Name = "BlockedReplan"
 	folder.Parent = parent
 
-	createFloor(folder, Vector3.new(60, 1, 18), Vector3.new(0, 0, 0), Color3.fromRGB(89, 91, 99))
-	createWall(folder, Vector3.new(60, 12, 1), Vector3.new(0, 6, -9))
-	createWall(folder, Vector3.new(60, 12, 1), Vector3.new(0, 6, 9))
-	createWall(folder, Vector3.new(1, 12, 18), Vector3.new(-30, 6, 0))
-	createWall(folder, Vector3.new(1, 12, 18), Vector3.new(30, 6, 0))
-	createWall(folder, Vector3.new(10, 12, 1), Vector3.new(0, 6, 0))
-	createWall(folder, Vector3.new(1, 12, 8), Vector3.new(8, 6, -4.5))
-	createWall(folder, Vector3.new(1, 12, 8), Vector3.new(8, 6, 4.5))
+	createFloor(folder, Vector3.new(100, 1, 40), Vector3.new(0, 0, 0), Color3.fromRGB(89, 91, 99))
+	createWall(folder, Vector3.new(100, 12, 1), Vector3.new(0, 6, -20))
+	createWall(folder, Vector3.new(100, 12, 1), Vector3.new(0, 6, 20))
+	createWall(folder, Vector3.new(1, 12, 40), Vector3.new(-50, 6, 0))
+	createWall(folder, Vector3.new(1, 12, 40), Vector3.new(50, 6, 0))
+	createWall(folder, Vector3.new(18, 12, 8), Vector3.new(0, 6, 0))
 
 	local movingBlock = Instance.new("Part")
 	movingBlock.Name = "DynamicBlocker"
 	movingBlock.Anchored = true
-	movingBlock.Size = Vector3.new(6, 8, 6)
-	movingBlock.Position = Vector3.new(-4, 4, 0)
+	movingBlock.Size = Vector3.new(8, 8, 8)
+	movingBlock.Position = Vector3.new(-18, 40, -8)
 	movingBlock.Color = Color3.fromRGB(255, 99, 71)
 	movingBlock.Material = Enum.Material.Metal
 	movingBlock.Parent = folder
 
-	local goal = createGoal(folder, "Goal", Vector3.new(24, 2, 0), Color3.fromRGB(255, 210, 80))
+	local goal = createGoal(folder, "Goal", Vector3.new(40, 2, -8), Color3.fromRGB(255, 210, 80))
 	local npc =
-		createNPC(folder, "BlockedNPC", Vector3.new(-24, 3, 0), Color3.fromRGB(255, 146, 60))
+		createNPC(folder, "BlockedNPC", Vector3.new(-40, 3, -8), Color3.fromRGB(255, 146, 60))
 	local navigator = PathfindingPlus.Navigator.new(npc, {
+		coordinator = coordinator,
 		maxReplans = 6,
-		moveTimeout = 2,
+		moveTimeout = 4,
+		repathDelay = 0.25,
 	})
 
 	task.delay(1, function()
 		navigator:MoveTo(goal)
 	end)
 
-	task.spawn(function()
-		while movingBlock.Parent ~= nil do
-			movingBlock.Position = Vector3.new(-4, 4, 0)
-			task.wait(2)
-			movingBlock.Position = Vector3.new(-4, 40, 0)
-			task.wait(2)
+	task.delay(1.8, function()
+		if movingBlock.Parent == nil then
+			return
 		end
+
+		movingBlock.Position = Vector3.new(-18, 4, -8)
+		coordinator:RequestRepath(navigator, "BlockedAhead")
 	end)
 end
 

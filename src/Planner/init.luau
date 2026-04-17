@@ -1,6 +1,6 @@
 local PathfindingService = game:GetService("PathfindingService")
 
-local Goal = require(script.Parent.Parent.Shared.Goal)
+local Goal = require(script.Parent.Shared.Goal)
 local NormalizeResult = require(script.NormalizeResult)
 
 local Planner = {}
