@@ -17,6 +17,17 @@
       "PathfindingPlusExample": {
         "$path": "example/src/ServerScriptService"
       }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [0, -10, 0],
+          "Size": [512, 20, 512]
+        }
+      }
     }
   }
 }
