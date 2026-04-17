@@ -1,0 +1,9 @@
+std = "roblox"
+
+[config]
+empty_if = { comments_count = true }
+
+[rules]
+multiple_statements = "allow"
+mixed_table = "allow"
+global_usage = "allow"

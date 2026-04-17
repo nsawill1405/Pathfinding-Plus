@@ -1,0 +1,28 @@
+{
+  "name": "PathfindingPlus",
+  "emitLegacyScripts": false,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Packages": {
+        "$className": "Folder",
+        "PathfindingPlus": {
+          "$path": "src"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "PathfindingPlusExample": {
+        "$path": "example/src/ServerScriptService"
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "PathfindingPlusMarkers": {
+        "$path": "example/src/Workspace"
+      }
+    }
+  }
+}
